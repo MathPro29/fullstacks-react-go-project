@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -10,8 +10,7 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm({
     defaultValues: {
       username: "",
@@ -19,35 +18,54 @@ export default function Login() {
     },
   });
 
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-      if (Object.values(data).every((value) => value !== "")) {
-        const res = await fetch("http://localhost:8080/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        });
-        if (res.ok) {
-          const resData = await res.json();
-          localStorage.setItem("token", resData.token);
-          navigate("/dashboard");
-          toast.success("สำเร็จ!");
-        } else {
-          toast.error("รหัสผ่านไม่ถูกต้อง");
-        }
-      } else {
-        toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
+
+      if (Object.values(data).some((value) => value === "")) {
+        toast.error("Please fill in all fields");
+        return;
       }
+
+      const res = await fetch("http://localhost:8080/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      const resData = await res.json();
+
+      if (!res.ok || resData.status !== "ok") {
+        localStorage.removeItem("token");
+        toast.error(resData?.error || resData?.message || "Invalid username or password");
+        return;
+      }
+
+      const token = resData?.data?.token;
+      if (!token) {
+        localStorage.removeItem("token");
+        toast.error("Token not found in login response");
+        return;
+      }
+
+      localStorage.setItem("token", token);
+      toast.success("Login success");
+      navigate("/dashboard");
     } catch (error) {
-      toast.error("เกิดข้อผิดพลาด");
+      localStorage.removeItem("token");
+      toast.error("Cannot connect to server");
       console.error(error);
     } finally {
-      setTimeout(() => {
-        setLoading(false);
-      }, 1000);
+      setLoading(false);
     }
   };
 
@@ -66,7 +84,7 @@ export default function Login() {
                     placeholder="Username"
                     className="w-full border border-gray-300 rounded-md p-2"
                     {...register("username", {
-                      required: "กรุณากรอกชื่อผู้ใช้งาน",
+                      required: "Please enter username",
                     })}
                   />
                   {errors.username && <p>{errors.username.message}</p>}
@@ -78,9 +96,9 @@ export default function Login() {
                 <input
                   placeholder="Password"
                   className="w-full border border-gray-300 rounded-md p-2"
-                  type="text"
+                  type="password"
                   {...register("password", {
-                    required: "กรุณากรอกรหัสผ่าน",
+                    required: "Please enter password",
                   })}
                 />
                 {errors.password && <p>{errors.password.message}</p>}
@@ -88,7 +106,7 @@ export default function Login() {
 
               <div className="w-full flex justify-start items-center mt-5">
                 <button type="submit" disabled={loading} className="join-btn">
-                  {loading ? "กำลังส่งข้อมูล..." : "LOG IN"}
+                  {loading ? "Logging in..." : "LOG IN"}
                 </button>
               </div>
 

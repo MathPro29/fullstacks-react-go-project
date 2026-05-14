@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-
+import { useNavigate } from "react-router-dom";
 
 export default function Register() {
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const {
         register,
         handleSubmit,
         reset,
-        formState: { errors, isSubmitting },
+        formState: { errors },
     } = useForm({
         defaultValues: {
             username: "",
@@ -19,7 +20,6 @@ export default function Register() {
             fullname: ""
         },
     });
-
 
     const onSubmit = async (data) => {
         try {
@@ -34,18 +34,19 @@ export default function Register() {
                 });
 
                 if (res.ok) {
-                    const responseData = await res.json();
-                    console.log("Response:", responseData.message);
+                    toast.success("Success");
+                    reset();
+                    setTimeout(() => {
+                        navigate("/login");
+                    }, 1000);
+                } else {
+                    toast.error("Username is already taken");
                 }
-                console.log("Form data:", data);
-                toast.success("สำเร็จ!");
-                setTimeout(() => {
-                }, 1000);
             } else {
-                toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
+                toast.error("Please fill in all fields");
             }
         } catch (error) {
-            toast.error("เกิดข้อผิดพลาด");
+            toast.error("Something went wrong");
             console.error(error);
         } finally {
             setTimeout(() => {
@@ -69,7 +70,7 @@ export default function Register() {
                                         placeholder="Username"
                                         className="w-full border border-gray-300 rounded-md p-2"
                                         {...register("username", {
-                                            required: "กรุณากรอกชื่อผู้ใช้งาน",
+                                            required: "Please enter username",
                                         })}
                                     />
                                     {errors.username && <p>{errors.username.message}</p>}
@@ -82,10 +83,10 @@ export default function Register() {
                                     placeholder="Enter your email"
                                     className="w-full border border-gray-300 rounded-md p-2"
                                     {...register("email", {
-                                        required: "กรุณากรอกอีเมล",
+                                        required: "Please enter email",
                                         pattern: {
                                             value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                            message: "รูปแบบอีเมลไม่ถูกต้อง",
+                                            message: "Invalid email format",
                                         },
                                     })}
                                 />
@@ -96,9 +97,9 @@ export default function Register() {
                                 <input
                                     placeholder="Password"
                                     className="w-full border border-gray-300 rounded-md p-2"
-                                    type="text"
+                                    type="password"
                                     {...register("password", {
-                                        required: "กรุณากรอกรหัสผ่าน",
+                                        required: "Please enter password",
                                     })}
                                 />
                                 {errors.password && <p>{errors.password.message}</p>}
@@ -110,21 +111,16 @@ export default function Register() {
                                     placeholder="Fullname"
                                     className="w-full border border-gray-300 rounded-md p-2"
                                     {...register("fullname", {
-                                        required: "กรุณากรอกชื่อจริงและนามสกุล",
+                                        required: "Please enter fullname",
                                     })}
                                 />
                                 {errors.fullname && <p>{errors.fullname.message}</p>}
                             </div>
                             <div className="w-full flex justify-start items-center mt-5">
                                 <button type="submit" disabled={loading} className="join-btn">
-                                    {loading ? "กำลังส่งข้อมูล..." : "Sign up"}
+                                    {loading ? "Signing up..." : "Sign up"}
                                 </button>
                             </div>
-                            <span>
-                                {/* 
-                                    Cookie : token => Tab
-                                */}
-                            </span>
                         </form>
                     </div>
                 </div>
