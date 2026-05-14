@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+
+# Build output
+bin/
+dist/
+tmp/
+*.exe
+*.test
+*.out
+
+# Local editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
