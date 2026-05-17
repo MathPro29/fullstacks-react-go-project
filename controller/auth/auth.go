@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"ktdev/jwt-api/orm"
 	"ktdev/jwt-api/response"
+	"ktdev/jwt-api/middleware"
 
 	// token.go
 	"net/http"
@@ -87,6 +88,11 @@ func Register(c *gin.Context) {
 	var json RegisterBody
 	if err := c.ShouldBindJSON(&json); err != nil {
 		response.BadRequest(c, err.Error())
+		return
+	}
+
+	if !middleware.ValidateEmail(json.Email) {
+		response.BadRequest(c, "invalid email")
 		return
 	}
 
