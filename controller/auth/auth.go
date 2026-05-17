@@ -13,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 var hmacSampleSecret []byte = []byte(os.Getenv("JWT_SECRET_KEY"))
@@ -22,6 +23,7 @@ type RegisterBody struct {
 	Email    string `json:"email"      binding:"required"`
 	Password string `json:"password" binding:"required"`
 	Fullname string `json:"fullname" binding:"required"`
+	Role     string `json:"role"       binding:"omitempty"`
 }
 
 type LoginBody struct {
@@ -39,12 +41,20 @@ func Login(c *gin.Context) {
 	}
 	// check user exits
 	var userExits orm.User
-	orm.DB.Where("username = ?", json.Username).First(&userExits)
+	err := orm.DB.Where("username = ?", json.Username).First(&userExits).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			response.BadRequest(c, "user not found")
+			return
+		}
+		response.InternalServerError(c, "cannot query user")
+		return
+	}
 	if userExits.ID == 0 {
 		response.BadRequest(c, "user not found")
 		return
 	}
-	err := bcrypt.CompareHashAndPassword([]byte(userExits.Password), []byte(json.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(userExits.Password), []byte(json.Password))
 	if err == nil {
 		hmacSampleSecret := []byte(os.Getenv("JWT_SECRET_KEY"))
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -82,25 +92,33 @@ func Register(c *gin.Context) {
 
 	// check user exits
 	var userExits orm.User
-	orm.DB.Where("username = ?", json.Username).First(&userExits)
-	if userExits.ID > 0 {
+	err := orm.DB.Where("username = ?", json.Username).First(&userExits).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		response.InternalServerError(c, "cannot query user")
+		return
+	}
+	if err == nil && userExits.ID > 0 {
 		response.BadRequest(c, "user already exists")
 		return
 	}
 
 	// check email exits
 	var emailExits orm.User
-	orm.DB.Where("email = ?", json.Email).First(&emailExits)
-	if emailExits.ID > 0 {
+	err = orm.DB.Where("email = ?", json.Email).First(&emailExits).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
+		response.InternalServerError(c, "cannot query email")
+		return
+	}
+	if err == nil && emailExits.ID > 0 {
 		response.BadRequest(c, "email already exists")
 		return
 	}
 
 	//create user
 	encryptPassword, _ := bcrypt.GenerateFromPassword([]byte(json.Password), 10)
-	user := orm.User{Username: json.Username, Email: json.Email, Password: string(encryptPassword), Fullname: json.Fullname}
+	user := orm.User{Username: json.Username, Email: json.Email, Password: string(encryptPassword), Fullname: json.Fullname, Role: json.Role}
 
-	orm.DB.Create(&user) // pass pointer of data to Create
+	orm.DB.Create(&user)
 	if user.ID > 0 {
 		response.OK(c, "register success", response.RegisterData{
 			UserID:    user.ID,

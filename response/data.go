@@ -16,3 +16,10 @@ type MyProfileData struct {
 	Email    string `json:"email"`
 	Fullname string `json:"fullname"`
 }
+
+type UpdateProfileData struct {
+	UserID   uint   `json:"userID"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Fullname string `json:"fullname"`
+}

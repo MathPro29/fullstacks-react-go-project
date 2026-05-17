@@ -38,7 +38,12 @@ func main() {
 
 	// อ่าน user ตัวเอง
 	authorized.GET("/profile", UserController.ReadMyProfile)
+	// Update user ตัวเอง
+	authorized.PUT("/updateprofile", UserController.UpdateProfile)
+	// Delete account ตัวเอง
+	authorized.DELETE("/delete", UserController.DeleteUser)
 	if err := r.Run(":8080"); err != nil {
 		log.Fatal("Failed to run server: ", err)
 	}
+
 }
