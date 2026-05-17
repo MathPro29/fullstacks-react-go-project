@@ -3,7 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import Home from "./pages/home";
-import Dashboard from "./pages/Auth/index.jsx";
+import Dashboard from "./pages/Auth/dashboard.jsx";
+import UpdateProfile from "./pages/Auth/updateprofile.jsx";
+import ShowData from "./pages/Auth/showdata.jsx";
 
 const App = () => {
   return (
@@ -13,6 +15,8 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/updateprofile" element={<UpdateProfile />} />
+          <Route path="/showdata" element={<ShowData />} />
           <Route path="/" element={<Home />} />
         </Routes>
       </BrowserRouter>

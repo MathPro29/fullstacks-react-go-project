@@ -46,7 +46,9 @@ export default function Login() {
 
       if (!res.ok || resData.status !== "ok") {
         localStorage.removeItem("token");
-        toast.error(resData?.error || resData?.message || "Invalid username or password");
+        toast.error(
+          resData?.error || resData?.message || "Invalid username or password",
+        );
         return;
       }
 
