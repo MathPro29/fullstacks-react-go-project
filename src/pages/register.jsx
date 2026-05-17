@@ -11,28 +11,35 @@ export default function Register() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
       fullname: "",
       role: "user",
     },
   });
 
+  const password = watch("password");
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);
       if (Object.values(data).every((value) => value !== "")) {
+        const { confirmPassword, ...payload } = data;
         const res = await fetch("http://localhost:8080/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         });
+
+        const result = await res.json();
 
         if (res.ok) {
           toast.success("Success");
@@ -41,7 +48,7 @@ export default function Register() {
             navigate("/login");
           }, 1000);
         } else {
-          toast.error("Username is already taken");
+          toast.error(result.error || "Register failed");
         }
       } else {
         toast.error("Please fill in all fields");
@@ -110,8 +117,7 @@ export default function Register() {
                   {...register("email", {
                     required: "Please enter email",
                     pattern: {
-                      prefix: "[a-zA-Z0-9]*",
-                      value: /^[a-zA-Z0-9]*@[a-zA-Z0-9]*.[a-zA-Z0-9]*$/,
+                      value: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
                       message: "Invalid email format",
                     },
                   })}
@@ -146,7 +152,7 @@ export default function Register() {
                 {errors.password && <p>{errors.password.message}</p>}
               </div>
 
-              {/* <div className="w-full">
+              <div className="w-full">
                 <p>Confirm Password</p>
                 <input
                   placeholder="Confirm Password"
@@ -154,12 +160,14 @@ export default function Register() {
                   type="password"
                   {...register("confirmPassword", {
                     required: "Please enter confirm password",
+                    validate: (value) =>
+                      value === password || "Passwords do not match",
                   })}
                 />
                 {errors.confirmPassword && (
                   <p>{errors.confirmPassword.message}</p>
                 )}
-              </div> */}
+              </div>
 
               <div className="w-full flex justify-start items-center mt-5">
                 <button type="submit" disabled={loading} className="join-btn">
